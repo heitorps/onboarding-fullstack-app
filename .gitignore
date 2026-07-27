@@ -1,0 +1,13 @@
+# Root ignores
+.vscode/
+.DS_Store
+
+# Backend ignores
+backend/target/
+backend/.mvn/
+backend/.backend.env
+
+# Frontend ignores
+frontend/dist/
+frontend/node_modules/
+frontend/.angular/
