@@ -1,6 +1,5 @@
 package backend.models;
 
-import java.io.Serializable;
 
 import org.hibernate.query.common.FetchClauseType;
 
