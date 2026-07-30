@@ -3,6 +3,7 @@ package backend.services;
 import backend.models.User;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -40,12 +41,33 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User loginUser(String username, String rawPassword){
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("Nome de usuário ou senha incorretos"));
+
+        if(!passwordEncoder.matches(rawPassword, user.getPassword())){
+            throw new IllegalArgumentException("Nome de usuário ou senha incorretos");
+        }
+
+        return user;
+    }
+
     public Optional<User> findById(Long id){
         return userRepository.findById(id);
     }
 
+    public User getUserById(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Usuário '" + id + "' não encontrado"));
+    }
+
     public Optional<User> findByUsername(String username){
         return userRepository.findByUsername(username);
+    }
+
+    public User getUserByUsername(String username){
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Usuário '" + username + "' não encontrado"));
     }
 
     @Transactional

@@ -1,19 +1,25 @@
 package backend.controllers;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import backend.models.User;
+import backend.dtos.UserProfileDTO;
 import backend.dtos.UserRegisterDTO;
 import backend.dtos.UserResponseDTO;
 import backend.services.UserService;
 import jakarta.validation.Valid;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -41,6 +47,18 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/find")
+    public ResponseEntity<UserResponseDTO> findUser(@RequestParam(value = "name") String name) {
+        User targetUser = userService.getUserByUsername(name);
+
+        UserResponseDTO responseDTO = new UserResponseDTO(
+            targetUser.getId(),
+            targetUser.getUsername(),
+            targetUser.getBio()
+        );
+
+        return ResponseEntity.ok(responseDTO);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponseDTO> registerUser(@Valid @RequestBody UserRegisterDTO registerDTO){
@@ -58,6 +76,36 @@ public class UserController {
         );
 
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponseDTO> loginUser(@Valid @RequestBody UserRegisterDTO loginDTO){
+        User loggedUser = userService.loginUser(loginDTO.getUsername(), loginDTO.getPassword());
+
+        UserResponseDTO responseDTO = new UserResponseDTO(loggedUser.getId(), loggedUser.getUsername(), loggedUser.getBio());
+
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @GetMapping("/{id}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<UserProfileDTO> getProfile(@PathVariable Long id){
+        User user = userService.getUserById(id);
+
+        List<String> followerNames = user.getFollowers().stream().map(User::getUsername).collect(Collectors.toList());
+        List<String> followingNames = user.getFollowing().stream().map(User::getUsername).collect(Collectors.toList());
+
+        UserProfileDTO profileDTO = new UserProfileDTO(
+            user.getId(),
+            user.getUsername(),
+            user.getBio(),
+            user.getReviews().size(),
+            user.getFollowers().size(),
+            user.getFollowing().size(),
+            followerNames,
+            followingNames);
+
+        return ResponseEntity.ok(profileDTO);
     }
 
     @PutMapping("/{id}/profile")
