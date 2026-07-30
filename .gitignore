@@ -7,6 +7,8 @@ backend/target/
 backend/.mvn/
 backend/.backend.env
 
+backend/src/main/resources/application.properties
+
 # Frontend ignores
 frontend/dist/
 frontend/node_modules/
