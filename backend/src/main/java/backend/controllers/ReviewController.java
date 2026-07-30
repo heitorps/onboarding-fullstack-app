@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.sound.midi.Track;
+
 import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import backend.dtos.ReviewCreateDTO;
 import backend.dtos.ReviewResponseDTO;
+import backend.dtos.ReviewUpdateDTO;
 import backend.dtos.TrackRatingResponseDTO;
 import backend.models.Review;
 import backend.models.TrackRating;
@@ -90,6 +94,31 @@ public class ReviewController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<ReviewResponseDTO> updateReview(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long reviewId,
+            @Valid @RequestBody ReviewUpdateDTO updateDTO){
+        
+        Review reviewData = new Review();
+        reviewData.setGlobalScore(updateDTO.getGlobalScore());
+        reviewData.setReviewText(updateDTO.getReviewText());
+
+        List<TrackRating> newTracks = new ArrayList<>();
+        if(updateDTO.getTrackRatings() != null){
+            for(var dto : updateDTO.getTrackRatings()){
+                TrackRating track = new TrackRating();
+                track.setTrackName(dto.getTrackName());
+                track.setRating(dto.getRating());
+                newTracks.add(track);
+            }
+        }
+
+        Review updatedReview = reviewService.updateReview(reviewId, userId, reviewData, newTracks);
+
+        return ResponseEntity.ok(convertToResponseDTO(updatedReview));
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ReviewResponseDTO>> getReviewsByUser(
                 @PathVariable Long userId){
@@ -120,4 +149,16 @@ public class ReviewController {
 
         return ResponseEntity.ok(timeline);
     }
+
+    @GetMapping("/tracks")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<TrackRatingResponseDTO>> getTrackRatingsOrdered(@RequestHeader("X-User-Id") Long userId){
+        
+        List<TrackRatingResponseDTO> trackRatingsOrderedDTO = reviewService.getTrackRatingsOrdered(userId).stream()
+                .map(t -> new TrackRatingResponseDTO(t.getTrackName(), t.getRating()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(trackRatingsOrderedDTO);
+    }
+
 }

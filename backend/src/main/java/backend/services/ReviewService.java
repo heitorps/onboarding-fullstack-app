@@ -2,6 +2,7 @@ package backend.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,39 @@ public class ReviewService {
         }
 
         return reviewRepository.save(reviewRequest);
+    }
+
+    @Transactional
+    public Review updateReview(Long reviewId, Long userId, Review updatedData, List<TrackRating> newTrackRatings){
+        Review review = reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new NoSuchElementException("Review não encontrada"));
+
+        if(!review.getUser().getId().equals(userId)){
+            throw new SecurityException("Você não tem permissão para editar esta review.");
+        }
+
+        if (updatedData.getGlobalScore() == null ||
+            updatedData.getGlobalScore() < 0.0f ||
+            updatedData.getGlobalScore() > 10.0f){
+                throw new IllegalArgumentException("A nota deve ser um valor entre 0.0 e 10.0.");
+            }
+
+        if (updatedData.getReviewText() == null || updatedData.getReviewText().trim().isEmpty()) {
+            throw new IllegalArgumentException("O texto da review não pode estar vazio.");
+        }
+
+        review.setGlobalScore(updatedData.getGlobalScore());
+        review.setReviewText(updatedData.getReviewText());
+
+        review.getTrackRatings().clear();
+
+        if(newTrackRatings != null){
+            for(TrackRating track : newTrackRatings){
+                review.addTrackRating(track);
+            }
+        }
+
+        return reviewRepository.save(review);
     }
 
     @Transactional(readOnly = true)
