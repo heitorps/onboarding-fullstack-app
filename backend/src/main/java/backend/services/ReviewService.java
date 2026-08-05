@@ -100,6 +100,12 @@ public class ReviewService {
         return reviewRepository.findByUserId(userId);
     }
 
+    @Transactional(readOnly = true)
+    public Review getReviewById(Long id){
+        return reviewRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Review não encontrada."));
+    }
+
     @Transactional
     public void deleteReview(Long reviewId, Long userId){
         

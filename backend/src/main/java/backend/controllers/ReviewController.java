@@ -130,6 +130,14 @@ public class ReviewController {
         return ResponseEntity.ok(responseList);
     }
 
+    @GetMapping("/{reviewId}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ReviewResponseDTO> getReview(@PathVariable Long reviewId){
+        ReviewResponseDTO response = convertToResponseDTO(reviewService.getReviewById(reviewId)); 
+    
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Map<String,String>> deleteReview(
             @RequestHeader("X-User-Id") Long userId,

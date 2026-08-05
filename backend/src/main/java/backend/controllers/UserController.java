@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import backend.models.User;
+import backend.dtos.UserMinDTO;
 import backend.dtos.UserProfileDTO;
 import backend.dtos.UserRegisterDTO;
 import backend.dtos.UserResponseDTO;
@@ -23,11 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 
-
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -87,13 +89,18 @@ public class UserController {
         return ResponseEntity.ok(responseDTO);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/profile/{id}")
     @Transactional(readOnly = true)
     public ResponseEntity<UserProfileDTO> getProfile(@PathVariable Long id){
         User user = userService.getUserById(id);
 
-        List<String> followerNames = user.getFollowers().stream().map(User::getUsername).collect(Collectors.toList());
-        List<String> followingNames = user.getFollowing().stream().map(User::getUsername).collect(Collectors.toList());
+        List<UserMinDTO> followerDTOs = user.getFollowers().stream()
+            .map(f -> new UserMinDTO(f.getId(), f.getUsername()))
+            .collect(Collectors.toList());
+
+        List<UserMinDTO> followingDTOs = user.getFollowing().stream()
+            .map(f -> new UserMinDTO(f.getId(), f.getUsername()))
+            .collect(Collectors.toList());
 
         UserProfileDTO profileDTO = new UserProfileDTO(
             user.getId(),
@@ -102,13 +109,13 @@ public class UserController {
             user.getReviews().size(),
             user.getFollowers().size(),
             user.getFollowing().size(),
-            followerNames,
-            followingNames);
+            followerDTOs,
+            followingDTOs);
 
         return ResponseEntity.ok(profileDTO);
     }
 
-    @PutMapping("/{id}/profile")
+    @PutMapping("/profile/{id}")
     public ResponseEntity<UserResponseDTO> updateProfile(
             @PathVariable Long id,
             @RequestBody Map<String,String> body){
@@ -125,7 +132,7 @@ public class UserController {
         return ResponseEntity.ok(responseDTO);
     }
     
-    @PostMapping("/{followerId}/follow/{targetUserId}")
+    @PostMapping("/follow/{followerId}/{targetUserId}")
     public ResponseEntity<Map<String,String>> followUser(
             @PathVariable Long followerId,
             @PathVariable Long targetUserId){
@@ -135,7 +142,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Usuário seguido com sucesso."));
     }
 
-    @PostMapping("/{followerId}/unfollow/{targetUserId}")
+    @PostMapping("/unfollow/{followerId}/{targetUserId}")
     public ResponseEntity<Map<String,String>> unfollowUser(
             @PathVariable Long followerId,
             @PathVariable Long targetUserId){
