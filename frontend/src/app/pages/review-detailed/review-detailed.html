@@ -1,0 +1,57 @@
+@if(!isLoading){
+    <div detail-container>
+        <button (click)="goBack()" class="btn-back">← Voltar</button>
+    
+        @if(errorMessage){
+            <div class="error-alert">{{errorMessage}}</div>
+        }
+
+        @if(review){
+            <div class="review-detail-card">
+                <div class="main-info">
+                    <img [src]="review.albumCoverUrl" alt="Capa do álbum" class="detail-cover">
+                    <div class="detail-text">
+                        <h1>{{review.albumName}}</h1>
+                        <h2>{{review.artistName}} &middot; {{review.releaseYear}}</h2>
+                        <p class="author">Avaliado por: <strong>&#64;{{review.username}}</strong></p>
+                    </div>
+                    <div class="big-score">{{review.globalScore}}/10</div>
+                </div>
+                
+                <div class="review-full-text">
+                    <h3>A Análise</h3>
+                    <p>"{{review.reviewText}}"</p>
+                </div>
+
+                @if(review.trackRatings?.length > 0){
+                    <div class="tracklist-section">
+                        <h3>Notas por Faixa</h3>
+                        <table class="tracks-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nome da Música</th>
+                                    <th>Classificação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let track of review.trackRatings; let i = index">
+                                    <td>{{i+1}}</td>
+                                    <td class="track-name">{{track.trackName}}</td>
+                                    <td>
+                                        <span class="badge" [ngClass]="'badge-' + track.rating">
+                                            {{track.rating}}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+<div class="loading-state" *ngIf="isLoading && !errorMessage">
+  <p>Carregando análise detalhada...</p>
+</div>
