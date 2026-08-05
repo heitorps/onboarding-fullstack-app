@@ -1,0 +1,46 @@
+<div class="timeline-container">
+    <h2>Sua Timeline</h2>
+
+    @if(errorMessage){
+        <div class="error-alert">
+            {{errorMessage}}
+        </div>
+    }
+
+    @if(isLoading){
+        <div class="loading">Carregando Timeline</div>
+    }
+
+    @if(!isLoading){
+        <div *ngIf="reviews?.length === 0 && !errorMessage" class="empty-state">
+            <p>Ainda não há reviews no seu feed. Comece a pesquisar álbuns para avaliar!</p>
+        </div>
+    
+        <div class="feed">
+            <div *ngFor="let review of reviews" class="review-card">
+    
+                <div class="review-header">
+                    <span class="username" [routerLink]="['/profile',review.userId]">&#64;{{ review.username }}</span>
+                    <span class="date">{{ review.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+    
+                <div class="album-info-block" [routerLink]="['/review',review.id]" style="cursor: pointer;">
+                    <img [src]="review.albumCoverUrl" alt="Capa do álbum" class="album-cover">
+                    <div class="album-text">
+                        <h3>{{review.albumName}}</h3>
+                        <p class="artist-name"> {{ review.artistName}} &middot; {{review.releaseYear}}</p>
+                    </div>
+    
+                    <div class="score-badge">{{ review.globalScore }}/10</div>
+                </div>
+    
+                <p class="review-text-content">"{{review.reviewText}}"</p>
+    
+                <div class="tracks-summary" *ngIf="review.trackRatings?.length > 0">
+                    <small> Contém {{review.trackRatings.length}} músicas</small>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
